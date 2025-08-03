@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siatkomat - Generator Siatek Projektowych</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand-yellow: #FFD900;
+            --brand-dark: #1a1a1a;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .controls-panel {
+            max-height: 100vh;
+            overflow-y: auto;
+            background-color: white;
+        }
+        .preview-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e5e7eb;
+            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+        #preview-svg {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid #d1d5db;
+            background-color: white;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .form-label {
+            @apply block text-sm font-medium text-gray-600 mb-1;
+        }
+        .form-input, .form-select {
+            @apply block w-full bg-white border-gray-400 border text-gray-900 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 p-2.5 transition-colors;
+        }
+        .btn {
+            @apply w-full text-brand-dark bg-brand-yellow hover:bg-yellow-400 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-bold rounded-lg text-sm px-5 py-2.5 text-center transition-colors uppercase tracking-wider;
+        }
+        .lang-switch {
+            @apply text-sm font-medium text-gray-500 hover:text-brand-dark transition-colors cursor-pointer;
+        }
+        .lang-switch.active {
+            color: var(--brand-dark);
+            font-weight: 700;
+            border-bottom: 2px solid var(--brand-yellow);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="flex flex-col md:flex-row h-screen">
+        <!-- Controls Panel -->
+        <div class="controls-panel w-full md:w-96 p-6 border-r border-gray-200 shadow-lg shrink-0 flex flex-col">
+            <div>
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-extrabold text-brand-dark" data-lang="appTitle">Generator Siatek</h1>
+                    <div class="flex space-x-3 items-center">
+                        <span id="lang-pl" class="lang-switch active">PL</span>
+                        <span id="lang-en" class="lang-switch">EN</span>
+                    </div>
+                </div>
+
+                <!-- Canvas Presets -->
+                <div class="mb-4">
+                    <label for="template-select" class="form-label" data-lang="canvasPresets">Presety Pola Roboczego</label>
+                    <select id="template-select" class="form-select">
+                        <option value="custom" data-lang="customSize">Własny rozmiar</option>
+                        <optgroup label="Druk" data-lang="print">
+                            <option value="a4">A4 (210x297mm)</option>
+                            <option value="letter">Letter (8.5x11in)</option>
+                        </optgroup>
+                        <optgroup label="Telefony" data-lang="phones">
+                            <option value="phone-s">Mały Telefon (375x667px)</option>
+                            <option value="phone-m">Średni Telefon (390x844px)</option>
+                        </optgroup>
+                         <optgroup label="Tablety" data-lang="tablets">
+                            <option value="tablet-s">Mały Tablet (768x1024px)</option>
+                            <option value="tablet-m">Średni Tablet (820x1180px)</option>
+                        </optgroup>
+                        <optgroup label="Ekrany" data-lang="screens">
+                            <option value="laptop">Laptop (1366x768px)</option>
+                            <option value="desktop">Desktop FHD (1920x1080px)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Canvas Dimensions -->
+                <div>
+                    <label class="form-label" data-lang="canvasDimensions">Wymiary pola roboczego</label>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <input type="number" id="width-input" class="form-input" value="1920">
+                        </div>
+                        <div>
+                            <input type="number" id="height-input" class="form-input" value="1080">
+                        </div>
+                    </div>
+                     <div class="mb-4">
+                         <select id="unit-select" class="form-select">
+                            <option value="px">Piksele (px)</option>
+                            <option value="mm">Milimetry (mm)</option>
+                            <option value="pt">Punkty (pt)</option>
+                            <option value="in">Cale (in)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="border-t pt-4 mt-4">
+                     <!-- Grid Presets -->
+                    <div class="mb-4">
+                        <label for="grid-preset-select" class="form-label" data-lang="gridPresets">Presety Siatki</label>
+                        <select id="grid-preset-select" class="form-select">
+                            <option value="custom" data-lang="customGrid">Siatka własna</option>
+                            <option value="web-12" data-lang="presetWeb12">Standard Web (12 kolumn)</option>
+                            <option value="web-4" data-lang="presetWeb4">Mobile UI (4 kolumny)</option>
+                            <option value="book" data-lang="presetBook">Strona książki (Rękopis)</option>
+                            <option value="thirds" data-lang="presetThirds">Trójpodział</option>
+                            <option value="golden-ratio" data-lang="presetGoldenRatio">Złoty podział (Rękopis)</option>
+                            <option value="baseline-8pt" data-lang="presetBaseline8pt">Siatka bazowa 8pt</option>
+                        </select>
+                    </div>
+
+
+                    <!-- Grid Type -->
+                    <div class="mb-4">
+                        <label for="grid-type-select" class="form-label" data-lang="gridType">Typ siatki</label>
+                        <select id="grid-type-select" class="form-select">
+                            <option value="modular" data-lang="gridTypeModular">Siatka modularna</option>
+                            <option value="column" data-lang="gridTypeColumn">Siatka kolumnowa</option>
+                            <option value="thirds" data-lang="gridTypeThirds">Trójpodział</option>
+                            <option value="isometric" data-lang="gridTypeIsometric">Siatka izometryczna</option>
+                            <option value="manuscript" data-lang="gridTypeManuscript">Siatka rękopisu</option>
+                            <option value="baseline" data-lang="gridTypeBaseline">Siatka bazowa (Baseline)</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Grid Parameters -->
+                    <div id="grid-params" class="space-y-4 mb-6">
+                        <div class="grid grid-cols-2 gap-4" id="columns-rows-group">
+                            <div>
+                                <label for="columns-input" class="form-label" data-lang="columns">Kolumny</label>
+                                <input type="number" id="columns-input" class="form-input" value="12" min="1">
+                            </div>
+                            <div>
+                                <label for="rows-input" class="form-label" data-lang="rows">Rzędy</label>
+                                <input type="number" id="rows-input" class="form-input" value="12" min="1">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4" id="gutter-group">
+                            <div>
+                                <label for="gutter-x-input" class="form-label" data-lang="hGutter">Odstęp poz. (Gutter)</label>
+                                <input type="number" id="gutter-x-input" class="form-input" value="20" min="0">
+                            </div>
+                             <div>
+                                <label for="gutter-y-input" class="form-label" data-lang="vGutter">Odstęp pion. (Gutter)</label>
+                                <input type="number" id="gutter-y-input" class="form-input" value="20" min="0">
+                            </div>
+                        </div>
+                         <div id="margin-group">
+                            <label class="form-label" data-lang="margins">Marginesy</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                 <input type="number" id="margin-top-input" class="form-input" placeholder="Góra" data-lang-placeholder="top" value="40" min="0">
+                                 <input type="number" id="margin-right-input" class="form-input" placeholder="Prawa" data-lang-placeholder="right" value="40" min="0">
+                                 <input type="number" id="margin-bottom-input" class="form-input" placeholder="Dół" data-lang-placeholder="bottom" value="40" min="0">
+                                 <input type="number" id="margin-left-input" class="form-input" placeholder="Lewa" data-lang-placeholder="left" value="40" min="0">
+                            </div>
+                        </div>
+                        <div id="isometric-group" class="hidden space-y-2">
+                            <div>
+                                <label for="angle-input-1" class="form-label" data-lang="angle1">Kąt osi 1 (°)</label>
+                                <input type="range" id="angle-input-1" class="w-full" min="1" max="89" value="30" step="1">
+                                <span id="angle-value-1" class="text-sm text-gray-600">30°</span>
+                            </div>
+                            <div>
+                                <label for="angle-input-2" class="form-label" data-lang="angle2">Kąt osi 2 (°)</label>
+                                <input type="range" id="angle-input-2" class="w-full" min="91" max="179" value="150" step="1">
+                                <span id="angle-value-2" class="text-sm text-gray-600">150°</span>
+                            </div>
+                        </div>
+                         <div id="baseline-group" class="hidden">
+                            <label for="baseline-input" class="form-label" data-lang="baselineSpacing">Odstęp linii bazowej</label>
+                            <input type="number" id="baseline-input" class="form-input" value="8" min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Options -->
+                <div class="space-y-4 mb-6 border-t pt-6">
+                     <h2 class="text-lg font-semibold text-gray-800" data-lang="preview">Podgląd</h2>
+                    <div>
+                        <label for="grid-color-input" class="form-label" data-lang="gridColor">Kolor siatki</label>
+                        <input type="color" id="grid-color-input" class="form-input h-10" value="#0000FF">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="mt-auto pt-6 border-t">
+                <button id="download-btn" class="btn mb-4" data-lang="downloadSVG">Pobierz SVG</button>
+                <p class="text-xs text-center text-gray-400">
+                    <span data-lang="footerMadeFor">Stworzone dla robisz.to</span> | <a href="mailto:maciek@robisz.to" class="hover:text-brand-dark">maciek@robisz.to</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Preview Area -->
+        <div class="preview-area flex-1 bg-gray-200 p-4 md:p-8">
+            <svg id="preview-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- I18N, UNITS & PRESETS ---
+            const translations = {
+                pl: {
+                    appTitle: "Generator Siatek", canvasPresets: "Presety Pola Roboczego", customSize: "Własny rozmiar", print: "Druk", phones: "Telefony", tablets: "Tablety", screens: "Ekrany",
+                    canvasDimensions: "Wymiary pola roboczego", gridPresets: "Presety Siatki", customGrid: "Siatka własna", presetWeb12: "Standard Web (12 kolumn)", presetWeb4: "Mobile UI (4 kolumny)",
+                    presetBook: "Strona książki (Rękopis)", presetThirds: "Trójpodział", presetGoldenRatio: "Złoty podział (Rękopis)", presetBaseline8pt: "Siatka bazowa 8pt",
+                    gridType: "Typ siatki", gridTypeModular: "Siatka modularna", gridTypeColumn: "Siatka kolumnowa", gridTypeThirds: "Trójpodział", gridTypeIsometric: "Siatka izometryczna",
+                    gridTypeManuscript: "Siatka rękopisu", gridTypeBaseline: "Siatka bazowa (Baseline)", columns: "Kolumny", rows: "Rzędy", hGutter: "Odstęp poz. (Gutter)",
+                    vGutter: "Odstęp pion. (Gutter)", margins: "Marginesy", top: "Góra", right: "Prawa", bottom: "Dół", left: "Lewa", angle: "Kąt (°)", angle1: "Kąt osi 1 (°)", angle2: "Kąt osi 2 (°)",
+                    baselineSpacing: "Odstęp linii bazowej", preview: "Podgląd", gridColor: "Kolor siatki", downloadSVG: "Pobierz SVG", footerMadeFor: "Stworzone dla robisz.to"
+                },
+                en: {
+                    appTitle: "Grid Generator", canvasPresets: "Canvas Presets", customSize: "Custom size", print: "Print", phones: "Phones", tablets: "Tablets", screens: "Screens",
+                    canvasDimensions: "Canvas Dimensions", gridPresets: "Grid Presets", customGrid: "Custom Grid", presetWeb12: "Standard Web (12 col)", presetWeb4: "Mobile UI (4 col)",
+                    presetBook: "Book Page (Manuscript)", presetThirds: "Rule of Thirds", presetGoldenRatio: "Golden Ratio (Manuscript)", presetBaseline8pt: "8pt Baseline Grid",
+                    gridType: "Grid Type", gridTypeModular: "Modular Grid", gridTypeColumn: "Column Grid", gridTypeThirds: "Rule of Thirds", gridTypeIsometric: "Isometric Grid",
+                    gridTypeManuscript: "Manuscript Grid", gridTypeBaseline: "Baseline Grid", columns: "Columns", rows: "Rows", hGutter: "Horiz. Gutter", vGutter: "Vert. Gutter",
+                    margins: "Margins", top: "Top", right: "Right", bottom: "Bottom", left: "Left", angle: "Angle (°)", angle1: "Axis 1 Angle (°)", angle2: "Axis 2 Angle (°)",
+                    baselineSpacing: "Baseline Spacing", preview: "Preview", gridColor: "Grid Color", downloadSVG: "Download SVG", footerMadeFor: "Made for robisz.to"
+                }
+            };
+            const DPI = 96;
+            const unitConverters = {
+                px: { to: val => val, from: val => val },
+                mm: { to: val => val * (DPI / 25.4), from: val => val / (DPI / 25.4) },
+                pt: { to: val => val * (DPI / 72), from: val => val / (DPI / 72) },
+                in: { to: val => val * DPI, from: val => val / DPI }
+            };
+            const gridPresets = {
+                'web-12': { gridType: 'column', columns: 12, gutterX: 24, marginTop: 40, marginRight: 40, marginBottom: 40, marginLeft: 40 },
+                'web-4': { gridType: 'column', columns: 4, gutterX: 16, marginTop: 24, marginRight: 24, marginBottom: 24, marginLeft: 24 },
+                'book': { gridType: 'manuscript', marginTop: 72, marginRight: 54, marginBottom: 90, marginLeft: 54 },
+                'thirds': { gridType: 'thirds' },
+                'golden-ratio': { gridType: 'manuscript' },
+                'baseline-8pt': { gridType: 'baseline', baseline: 8, marginTop: 24, marginRight: 24, marginBottom: 24, marginLeft: 24 }
+            };
+
+            // --- DOM ELEMENTS ---
+            const ui = {
+                langPl: document.getElementById('lang-pl'),
+                langEn: document.getElementById('lang-en'),
+                templateSelect: document.getElementById('template-select'),
+                widthInput: document.getElementById('width-input'),
+                heightInput: document.getElementById('height-input'),
+                unitSelect: document.getElementById('unit-select'),
+                gridPresetSelect: document.getElementById('grid-preset-select'),
+                gridTypeSelect: document.getElementById('grid-type-select'),
+                columnsInput: document.getElementById('columns-input'),
+                rowsInput: document.getElementById('rows-input'),
+                gutterXInput: document.getElementById('gutter-x-input'),
+                gutterYInput: document.getElementById('gutter-y-input'),
+                marginTopInput: document.getElementById('margin-top-input'),
+                marginRightInput: document.getElementById('margin-right-input'),
+                marginBottomInput: document.getElementById('margin-bottom-input'),
+                marginLeftInput: document.getElementById('margin-left-input'),
+                angleInput1: document.getElementById('angle-input-1'),
+                angleValue1: document.getElementById('angle-value-1'),
+                angleInput2: document.getElementById('angle-input-2'),
+                angleValue2: document.getElementById('angle-value-2'),
+                baselineInput: document.getElementById('baseline-input'),
+                gridColorInput: document.getElementById('grid-color-input'),
+                downloadBtn: document.getElementById('download-btn'),
+                previewSvg: document.getElementById('preview-svg'),
+                columnsRowsGroup: document.getElementById('columns-rows-group'),
+                gutterGroup: document.getElementById('gutter-group'),
+                marginGroup: document.getElementById('margin-group'),
+                isometricGroup: document.getElementById('isometric-group'),
+                baselineGroup: document.getElementById('baseline-group'),
+            };
+
+            // --- STATE ---
+            let state = { lang: 'pl' };
+            let currentPxValues = { width: 1920, height: 1080 };
+
+            // --- FUNCTIONS ---
+            function setLanguage(lang) {
+                state.lang = lang;
+                document.documentElement.lang = lang;
+                ui.langPl.classList.toggle('active', lang === 'pl');
+                ui.langEn.classList.toggle('active', lang === 'en');
+                
+                document.querySelectorAll('[data-lang]').forEach(el => {
+                    const key = el.dataset.lang;
+                    if (translations[lang][key]) {
+                        if (el.tagName.toLowerCase() === 'optgroup') {
+                            el.label = translations[lang][key];
+                        } else {
+                            el.textContent = translations[lang][key];
+                        }
+                    }
+                });
+                document.querySelectorAll('[data-lang-placeholder]').forEach(el => {
+                    const key = el.dataset.langPlaceholder;
+                    if (translations[lang][key]) {
+                        el.placeholder = translations[lang][key];
+                    }
+                });
+            }
+
+            function updateStateFromUI() {
+                const unit = ui.unitSelect.value;
+                const toPx = unitConverters[unit].to;
+
+                currentPxValues.width = toPx(parseFloat(ui.widthInput.value) || 0);
+                currentPxValues.height = toPx(parseFloat(ui.heightInput.value) || 0);
+                
+                state = {
+                    ...state,
+                    width: currentPxValues.width,
+                    height: currentPxValues.height,
+                    unit: unit,
+                    gridType: ui.gridTypeSelect.value,
+                    columns: parseInt(ui.columnsInput.value) || 1,
+                    rows: parseInt(ui.rowsInput.value) || 1,
+                    gutterX: toPx(parseFloat(ui.gutterXInput.value) || 0),
+                    gutterY: toPx(parseFloat(ui.gutterYInput.value) || 0),
+                    marginTop: toPx(parseFloat(ui.marginTopInput.value) || 0),
+                    marginRight: toPx(parseFloat(ui.marginRightInput.value) || 0),
+                    marginBottom: toPx(parseFloat(ui.marginBottomInput.value) || 0),
+                    marginLeft: toPx(parseFloat(ui.marginLeftInput.value) || 0),
+                    angle1: parseInt(ui.angleInput1.value) || 30,
+                    angle2: parseInt(ui.angleInput2.value) || 150,
+                    baseline: toPx(parseFloat(ui.baselineInput.value) || 0),
+                    gridColor: ui.gridColorInput.value
+                };
+            }
+
+            function updateControlsVisibility() {
+                const gridType = ui.gridTypeSelect.value;
+                const allGroups = [ui.columnsRowsGroup, ui.gutterGroup, ui.marginGroup, ui.isometricGroup, ui.baselineGroup];
+                allGroups.forEach(g => g.style.display = 'none');
+                
+                ui.rowsInput.parentElement.style.display = 'block';
+                ui.gutterYInput.parentElement.style.display = 'block';
+
+                switch(gridType) {
+                    case 'modular':
+                        [ui.columnsRowsGroup, ui.gutterGroup, ui.marginGroup].forEach(g => g.style.display = 'grid');
+                        break;
+                    case 'column':
+                        [ui.columnsRowsGroup, ui.gutterGroup, ui.marginGroup].forEach(g => g.style.display = 'grid');
+                        ui.rowsInput.parentElement.style.display = 'none';
+                        ui.gutterYInput.parentElement.style.display = 'none';
+                        break;
+                    case 'thirds':
+                        // No controls needed
+                        break;
+                    case 'isometric':
+                        ui.isometricGroup.style.display = 'block';
+                        break;
+                    case 'manuscript':
+                        ui.marginGroup.style.display = 'grid';
+                        break;
+                    case 'baseline':
+                        ui.marginGroup.style.display = 'grid';
+                        ui.baselineGroup.style.display = 'block';
+                        break;
+                }
+            }
+
+            function render() {
+                updateStateFromUI();
+                if (state.width <= 0 || state.height <= 0) return;
+
+                ui.previewSvg.setAttribute('viewBox', `0 0 ${state.width} ${state.height}`);
+                ui.previewSvg.style.width = '100%';
+                ui.previewSvg.style.aspectRatio = state.width / state.height;
+                
+                const gridPaths = generateGridPaths();
+                const gridPathData = gridPaths.join(' ');
+                ui.previewSvg.innerHTML = `<g id="grid-lines" stroke="${state.gridColor}" stroke-width="1" fill="none"> <path d="${gridPathData}" /> </g>`;
+            }
+
+            function generateGridPaths() {
+                switch(state.gridType) {
+                    case 'modular': return generateModularGridPaths();
+                    case 'column': return generateColumnGridPaths();
+                    case 'thirds': return generateThirdsGridPaths();
+                    case 'isometric': return generateIsometricGridPaths();
+                    case 'manuscript': return generateManuscriptGridPaths();
+                    case 'baseline': return generateBaselineGridPaths();
+                    default: return [];
+                }
+            }
+            
+            function generateModularGridPaths() {
+                let paths = [];
+                const { width, height, columns, rows, gutterX, gutterY, marginTop, marginRight, marginBottom, marginLeft } = state;
+                const innerWidth = width - marginLeft - marginRight;
+                const innerHeight = height - marginTop - marginBottom;
+                const colWidth = (innerWidth - (columns - 1) * gutterX) / columns;
+                const rowHeight = (innerHeight - (rows - 1) * gutterY) / rows;
+
+                if (colWidth <= 0 || rowHeight <= 0) return [];
+
+                for (let i = 0; i <= columns; i++) {
+                    const x = marginLeft + i * (colWidth + gutterX);
+                    paths.push(`M ${x} ${marginTop} V ${height - marginBottom}`);
+                    if (i < columns) {
+                        paths.push(`M ${x + colWidth} ${marginTop} V ${height - marginBottom}`);
+                    }
+                }
+                for (let i = 0; i <= rows; i++) {
+                    const y = marginTop + i * (rowHeight + gutterY);
+                    paths.push(`M ${marginLeft} ${y} H ${width - marginRight}`);
+                     if (i < rows) {
+                        paths.push(`M ${marginLeft} ${y + rowHeight} H ${width - marginRight}`);
+                    }
+                }
+                return paths;
+            }
+
+            function generateColumnGridPaths() {
+                let paths = [];
+                const { width, height, columns, gutterX, marginTop, marginRight, marginBottom, marginLeft } = state;
+                const innerWidth = width - marginLeft - marginRight;
+                const colWidth = (innerWidth - (columns - 1) * gutterX) / columns;
+
+                if (colWidth <= 0) return [];
+                
+                paths.push(`M ${marginLeft} ${marginTop} H ${width - marginRight}`);
+                paths.push(`M ${marginLeft} ${height - marginBottom} H ${width - marginRight}`);
+
+                for (let i = 0; i < columns; i++) {
+                    const columnStart = marginLeft + i * (colWidth + gutterX);
+                    paths.push(`M ${columnStart} ${marginTop} V ${height - marginBottom}`);
+                    if (i === columns - 1) { // Draw the last line
+                         paths.push(`M ${columnStart + colWidth} ${marginTop} V ${height - marginBottom}`);
+                    }
+                }
+                return paths;
+            }
+
+            function generateThirdsGridPaths() {
+                 const { width, height } = state;
+                 return [
+                    `M ${width/3} 0 V ${height}`, `M ${width*2/3} 0 V ${height}`,
+                    `M 0 ${height/3} H ${width}`, `M 0 ${height*2/3} H ${width}`
+                 ];
+            }
+
+            function generateIsometricGridPaths() {
+                let paths = [];
+                const { width, height, angle1, angle2 } = state;
+                const step = Math.min(width, height) / 20;
+                const tan1 = Math.tan(angle1 * Math.PI / 180);
+                const tan2 = Math.tan(angle2 * Math.PI / 180);
+
+                for (let i = -width; i < width * 2; i += step) {
+                    paths.push(`M ${i} 0 L ${i - height / tan1} ${height}`);
+                    paths.push(`M ${i} 0 L ${i - height / tan2} ${height}`);
+                }
+                return paths;
+            }
+            
+            function generateManuscriptGridPaths() {
+                const { width, height, marginTop, marginRight, marginBottom, marginLeft } = state;
+                const x = marginLeft, y = marginTop;
+                const w = width - marginLeft - marginRight;
+                const h = height - marginTop - marginBottom;
+                return [`M ${x} ${y} H ${x+w} V ${y+h} H ${x} Z`];
+            }
+
+            function generateBaselineGridPaths() {
+                let paths = [];
+                const { width, height, baseline, marginTop, marginBottom } = state;
+                if (baseline <= 0) return [];
+                for (let y = marginTop; y < height - marginBottom; y += baseline) {
+                    paths.push(`M 0 ${y} H ${width}`);
+                }
+                return paths;
+            }
+            
+            function downloadSVG() {
+                const gridPaths = generateGridPaths();
+                const pathData = gridPaths.join(' ');
+                const layerLabel = state.lang === 'pl' ? 'Siatka (zablokowana)' : 'Grid (locked)';
+                const watermarkText = state.lang === 'pl' ? 'Wygenerowane dla ROBISZ.TO' : 'Generated for ROBISZ.TO';
+
+                const watermarkLayer = `
+  <g inkscape:label="Watermark"
+     inkscape:groupmode="layer"
+     id="layer2">
+    <text x="50%"
+          y="95%"
+          text-anchor="middle"
+          font-family="Poppins, sans-serif"
+          font-size="${Math.min(state.width, state.height) / 25}"
+          font-weight="600"
+          fill="#000000"
+          fill-opacity="0.08">
+      ${watermarkText}
+    </text>
+  </g>`;
+
+                const svgString = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${state.width}px" height="${state.height}px" viewBox="0 0 ${state.width} ${state.height}" version="1.1"
+     xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd">
+  <sodipodi:namedview inkscape:document-units="px" />
+  <g inkscape:label="${layerLabel}" inkscape:groupmode="layer" id="layer1" sodipodi:insensitive="true">
+    <path d="${pathData}" fill="none" stroke="${state.gridColor}" stroke-width="1" id="grid-path" />
+  </g>
+  ${watermarkLayer}
+</svg>`;
+
+                const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `siatka-${state.gridType}-${Math.round(state.width)}x${Math.round(state.height)}.svg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+            
+            function applyGridPreset(presetKey) {
+                if (!presetKey || presetKey === 'custom') {
+                     if(presetKey === 'custom') ui.gridPresetSelect.value = 'custom';
+                     return;
+                }
+                
+                ui.gridPresetSelect.value = presetKey;
+                const preset = { ...gridPresets[presetKey] }; 
+                const fromPx = unitConverters[state.unit].from;
+                
+                ui.gridTypeSelect.value = preset.gridType;
+
+                const PRESET_BASE_WIDTH = 1920; 
+                const scaleFactor = state.width < PRESET_BASE_WIDTH ? state.width / PRESET_BASE_WIDTH : 1;
+                
+                if (presetKey === 'golden-ratio') {
+                    const GOLDEN_RATIO = 1.618;
+                    const contentHeight = state.height * 0.8; 
+                    const contentWidth = contentHeight / GOLDEN_RATIO;
+                    const marginY = (state.height - contentHeight) / 2;
+                    const marginX = (state.width - contentWidth) / 2;
+                    preset.marginTop = marginY;
+                    preset.marginBottom = marginY;
+                    preset.marginLeft = marginX;
+                    preset.marginRight = marginX;
+                }
+                
+                const fields = ['columns', 'rows', 'gutterX', 'gutterY', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'baseline'];
+                fields.forEach(field => {
+                    const input = ui[field + 'Input'];
+                    if (input) {
+                        if (preset[field] !== undefined) {
+                            let valueInPx = preset[field];
+                            if (field.includes('margin') || field.includes('gutter')) {
+                                valueInPx *= scaleFactor;
+                            }
+                            const valueInUnits = fromPx(valueInPx);
+                            if (field === 'columns' || field === 'rows') {
+                                input.value = Math.round(valueInUnits);
+                            } else {
+                                input.value = parseFloat(valueInUnits.toFixed(2));
+                            }
+                        } else {
+                           if (field.includes('gutter') || field.includes('margin')) input.value = 0;
+                           else if (field === 'columns' || field === 'rows') input.value = 1;
+                           else if (field === 'baseline') input.value = 0;
+                        }
+                    }
+                });
+                
+                updateControlsVisibility();
+                render();
+            }
+
+            // --- EVENT LISTENERS ---
+            ui.langPl.addEventListener('click', () => setLanguage('pl'));
+            ui.langEn.addEventListener('click', () => setLanguage('en'));
+
+            ui.templateSelect.addEventListener('change', (e) => {
+                const selected = e.target.value;
+                let templateValues;
+                let gridPresetToApply = null;
+
+                if (selected === 'a4') { templateValues = { w: 210, h: 297, u: 'mm' }; gridPresetToApply = 'book'; }
+                else if (selected === 'letter') { templateValues = { w: 8.5, h: 11, u: 'in' }; gridPresetToApply = 'book'; }
+                else if (selected === 'phone-s') { templateValues = { w: 375, h: 667, u: 'px' }; gridPresetToApply = 'web-4'; }
+                else if (selected === 'phone-m') { templateValues = { w: 390, h: 844, u: 'px' }; gridPresetToApply = 'web-4'; }
+                else if (selected === 'tablet-s') { templateValues = { w: 768, h: 1024, u: 'px' }; gridPresetToApply = 'web-12'; }
+                else if (selected === 'tablet-m') { templateValues = { w: 820, h: 1180, u: 'px' }; gridPresetToApply = 'web-12'; }
+                else if (selected === 'laptop') { templateValues = { w: 1366, h: 768, u: 'px' }; gridPresetToApply = 'web-12'; }
+                else if (selected === 'desktop') { templateValues = { w: 1920, h: 1080, u: 'px' }; gridPresetToApply = 'web-12'; }
+                
+                if (templateValues) {
+                    ui.unitSelect.value = templateValues.u;
+                    ui.widthInput.value = templateValues.w;
+                    ui.heightInput.value = templateValues.h;
+                    updateStateFromUI(); 
+                    applyGridPreset(gridPresetToApply);
+                } else {
+                    render();
+                }
+            });
+
+            ui.unitSelect.addEventListener('change', () => {
+                const newUnit = ui.unitSelect.value;
+                const fromPx = unitConverters[newUnit].from;
+                const oldUnit = state.unit; 
+                const toPx = unitConverters[oldUnit].to;
+
+                ui.widthInput.value = parseFloat(fromPx(currentPxValues.width).toFixed(2));
+                ui.heightInput.value = parseFloat(fromPx(currentPxValues.height).toFixed(2));
+
+                const fields = ['gutterX', 'gutterY', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'baseline'];
+                fields.forEach(field => {
+                    const input = ui[field + 'Input'];
+                    if(input && input.value) {
+                        const valInOldUnits = parseFloat(input.value) || 0;
+                        const pxValue = toPx(valInOldUnits);
+                        input.value = parseFloat(fromPx(pxValue).toFixed(2));
+                    }
+                });
+                state.unit = newUnit;
+            });
+            
+            ui.gridPresetSelect.addEventListener('change', () => applyGridPreset(ui.gridPresetSelect.value));
+            
+            ui.gridTypeSelect.addEventListener('change', () => {
+                ui.gridPresetSelect.value = 'custom';
+                updateControlsVisibility();
+                render();
+            });
+            
+            const angleSliders = [ui.angleInput1, ui.angleInput2];
+            angleSliders.forEach((slider, index) => {
+                slider.addEventListener('input', (e) => {
+                    ui[`angleValue${index + 1}`].textContent = `${e.target.value}°`;
+                    ui.gridPresetSelect.value = 'custom';
+                    render();
+                });
+            });
+
+            const inputs = document.querySelectorAll('.form-input');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    if(document.activeElement === input) {
+                       if(input.id !== 'grid-color-input') ui.gridPresetSelect.value = 'custom';
+                       render();
+                    }
+                });
+            });
+            
+            ui.downloadBtn.addEventListener('click', downloadSVG);
+
+            // --- INITIALIZATION ---
+            setLanguage('pl');
+            updateStateFromUI(); 
+            applyGridPreset('web-12'); 
+        });
+    </script>
+</body>
+</html>
