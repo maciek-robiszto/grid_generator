@@ -26,8 +26,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #e5e7eb;
-            background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+            background-color: #a3a3a3;
+            background-image: radial-gradient(#737373 1px, transparent 1px);
             background-size: 16px 16px;
         }
         #preview-svg {
@@ -183,7 +183,7 @@
                         </div>
                          <div id="margin-group">
                             <label class="form-label" data-lang="margins">Marginesy</label>
-                            <div class="grid grid-cols-4 gap-1">
+                            <div class="grid grid-cols-4 gap-2">
                                  <input type="number" id="margin-top-input" class="form-input" placeholder="Góra" data-lang-placeholder="top" value="10" min="0">
                                  <input type="number" id="margin-right-input" class="form-input" placeholder="Prawa" data-lang-placeholder="right" value="10" min="0">
                                  <input type="number" id="margin-bottom-input" class="form-input" placeholder="Dół" data-lang-placeholder="bottom" value="10" min="0">
@@ -271,11 +271,11 @@
                 in: { to: val => val * DPI, from: val => val / DPI }
             };
             const gridPresets = {
-                'web-12': { gridType: 'column', columns: 12, gutterX: 10, marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 },
-                'web-4': { gridType: 'column', columns: 4, gutterX: 10, marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 },
+                'web-12': { gridType: 'column', columns: 12, gutterX: 3, marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 },
+                'web-4': { gridType: 'column', columns: 4, gutterX: 3, marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 },
                 'book': { gridType: 'manuscript', marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 },
                 'thirds': { gridType: 'thirds' },
-                'golden-ratio': { gridType: 'manuscript', marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 },
+                'golden-ratio': { gridType: 'manuscript' },
                 'baseline-8pt': { gridType: 'baseline', baseline: 8, marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 }
             };
 
@@ -460,17 +460,19 @@
                 const innerWidth = width - marginLeft - marginRight;
                 const colWidth = (innerWidth - (columns - 1) * gutterX) / columns;
 
-                if (colWidth <= 0) return [];
+                if (colWidth < 0) return [];
                 
                 paths.push(`M ${marginLeft} ${marginTop} H ${width - marginRight}`);
                 paths.push(`M ${marginLeft} ${height - marginBottom} H ${width - marginRight}`);
+                paths.push(`M ${marginLeft} ${marginTop} V ${height - marginBottom}`);
+                paths.push(`M ${width - marginRight} ${marginTop} V ${height - marginBottom}`);
 
-                for (let i = 0; i < columns; i++) {
-                    const columnStart = marginLeft + i * (colWidth + gutterX);
-                    paths.push(`M ${columnStart} ${marginTop} V ${height - marginBottom}`);
-                    if (i === columns - 1) { // Draw the last line
-                         paths.push(`M ${columnStart + colWidth} ${marginTop} V ${height - marginBottom}`);
-                    }
+                let currentX = marginLeft + colWidth;
+                for (let i = 0; i < columns - 1; i++) {
+                    paths.push(`M ${currentX} ${marginTop} V ${height - marginBottom}`);
+                    currentX += gutterX;
+                    paths.push(`M ${currentX} ${marginTop} V ${height - marginBottom}`);
+                    currentX += colWidth;
                 }
                 return paths;
             }
@@ -489,8 +491,9 @@
                 const step = Math.min(width, height) / 20;
                 const tan1 = Math.tan(angle1 * Math.PI / 180);
                 const tan2 = Math.tan(angle2 * Math.PI / 180);
+                const extendedRange = width + height * Math.max(Math.abs(1/tan1), Math.abs(1/tan2));
 
-                for (let i = -width; i < width * 2; i += step) {
+                for (let i = -extendedRange; i < extendedRange; i += step) {
                     paths.push(`M ${i} 0 L ${i - height / tan1} ${height}`);
                     paths.push(`M ${i} 0 L ${i - height / tan2} ${height}`);
                 }
@@ -566,23 +569,19 @@
                 
                 ui.gridPresetSelect.value = presetKey;
                 const preset = { ...gridPresets[presetKey] }; 
-                const fromPx = unitConverters[state.unit].from;
                 
                 ui.gridTypeSelect.value = preset.gridType;
-
-                const PRESET_BASE_WIDTH = 1920; 
-                const scaleFactor = state.width < PRESET_BASE_WIDTH ? state.width / PRESET_BASE_WIDTH : 1;
                 
                 if (presetKey === 'golden-ratio') {
                     const GOLDEN_RATIO = 1.618;
-                    const contentHeight = state.height * 0.8; 
+                    const contentHeight = currentPxValues.height * 0.8; 
                     const contentWidth = contentHeight / GOLDEN_RATIO;
-                    const marginY = (state.height - contentHeight) / 2;
-                    const marginX = (state.width - contentWidth) / 2;
-                    preset.marginTop = marginY;
-                    preset.marginBottom = marginY;
-                    preset.marginLeft = marginX;
-                    preset.marginRight = marginX;
+                    const marginY = (currentPxValues.height - contentHeight) / 2;
+                    const marginX = (currentPxValues.width - contentWidth) / 2;
+                    preset.marginTop = unitConverters[state.unit].from(marginY);
+                    preset.marginBottom = unitConverters[state.unit].from(marginY);
+                    preset.marginLeft = unitConverters[state.unit].from(marginX);
+                    preset.marginRight = unitConverters[state.unit].from(marginX);
                 }
                 
                 const fields = ['columns', 'rows', 'gutterX', 'gutterY', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft', 'baseline'];
@@ -590,21 +589,12 @@
                     const input = ui[field + 'Input'];
                     if (input) {
                         if (preset[field] !== undefined) {
-                            let valueInPx = preset[field];
-                            if ((field.includes('margin') || field.includes('gutter')) && state.unit === 'px') {
-                                valueInPx *= scaleFactor;
-                            }
-                            const valueInUnits = fromPx(valueInPx);
-                             // FIX: Ensure columns and rows are always integers
-                            if (field === 'columns' || field === 'rows') {
-                                input.value = preset[field];
-                            } else {
-                                input.value = parseFloat(valueInUnits.toFixed(2));
-                            }
+                            input.value = preset[field];
                         } else {
-                           if (field.includes('gutter') || field.includes('margin')) input.value = 0;
+                           if (field.includes('gutter')) input.value = 3;
+                           else if (field.includes('margin')) input.value = 10;
                            else if (field === 'columns' || field === 'rows') input.value = 1;
-                           else if (field === 'baseline') input.value = 0;
+                           else if (field === 'baseline') input.value = 8;
                         }
                     }
                 });
