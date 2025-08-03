@@ -183,7 +183,7 @@
                         </div>
                          <div id="margin-group">
                             <label class="form-label" data-lang="margins">Marginesy</label>
-                            <div class="grid grid-cols-4 gap-2">
+                            <div class="grid grid-cols-4 gap-1">
                                  <input type="number" id="margin-top-input" class="form-input" placeholder="Góra" data-lang-placeholder="top" value="10" min="0">
                                  <input type="number" id="margin-right-input" class="form-input" placeholder="Prawa" data-lang-placeholder="right" value="10" min="0">
                                  <input type="number" id="margin-bottom-input" class="form-input" placeholder="Dół" data-lang-placeholder="bottom" value="10" min="0">
@@ -271,12 +271,12 @@
                 in: { to: val => val * DPI, from: val => val / DPI }
             };
             const gridPresets = {
-                'web-12': { gridType: 'column', columns: 12, gutterX: 24, marginTop: 40, marginRight: 40, marginBottom: 40, marginLeft: 40 },
-                'web-4': { gridType: 'column', columns: 4, gutterX: 16, marginTop: 24, marginRight: 24, marginBottom: 24, marginLeft: 24 },
-                'book': { gridType: 'manuscript', marginTop: 72, marginRight: 54, marginBottom: 90, marginLeft: 54 },
+                'web-12': { gridType: 'column', columns: 12, gutterX: 10, marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 },
+                'web-4': { gridType: 'column', columns: 4, gutterX: 10, marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 },
+                'book': { gridType: 'manuscript', marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 },
                 'thirds': { gridType: 'thirds' },
-                'golden-ratio': { gridType: 'manuscript' },
-                'baseline-8pt': { gridType: 'baseline', baseline: 8, marginTop: 24, marginRight: 24, marginBottom: 24, marginLeft: 24 }
+                'golden-ratio': { gridType: 'manuscript', marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 },
+                'baseline-8pt': { gridType: 'baseline', baseline: 8, marginTop: 10, marginRight: 10, marginBottom: 10, marginLeft: 10 }
             };
 
             // --- DOM ELEMENTS ---
