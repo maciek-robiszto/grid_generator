@@ -407,8 +407,6 @@
                 if (state.width <= 0 || state.height <= 0) return;
 
                 ui.previewSvg.setAttribute('viewBox', `0 0 ${state.width} ${state.height}`);
-                ui.previewSvg.style.width = '100%';
-                ui.previewSvg.style.aspectRatio = state.width / state.height;
                 
                 const gridPaths = generateGridPaths();
                 const gridPathData = gridPaths.join(' ');
