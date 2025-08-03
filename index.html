@@ -435,21 +435,23 @@
                 const colWidth = (innerWidth - (columns - 1) * gutterX) / columns;
                 const rowHeight = (innerHeight - (rows - 1) * gutterY) / rows;
 
-                if (colWidth <= 0 || rowHeight <= 0) return [];
+                if (colWidth < 0 || rowHeight < 0) return [];
 
-                for (let i = 0; i <= columns; i++) {
-                    const x = marginLeft + i * (colWidth + gutterX);
-                    paths.push(`M ${x} ${marginTop} V ${height - marginBottom}`);
-                    if (i < columns) {
-                        paths.push(`M ${x + colWidth} ${marginTop} V ${height - marginBottom}`);
-                    }
+                // Draw outer box
+                paths.push(`M ${marginLeft} ${marginTop} H ${width - marginRight} V ${height - marginBottom} H ${marginLeft} Z`);
+
+                // Draw inner vertical gutter lines
+                for (let i = 0; i < columns - 1; i++) {
+                    const gutterStartX = marginLeft + (i + 1) * colWidth + i * gutterX;
+                    paths.push(`M ${gutterStartX} ${marginTop} V ${height - marginBottom}`);
+                    paths.push(`M ${gutterStartX + gutterX} ${marginTop} V ${height - marginBottom}`);
                 }
-                for (let i = 0; i <= rows; i++) {
-                    const y = marginTop + i * (rowHeight + gutterY);
-                    paths.push(`M ${marginLeft} ${y} H ${width - marginRight}`);
-                     if (i < rows) {
-                        paths.push(`M ${marginLeft} ${y + rowHeight} H ${width - marginRight}`);
-                    }
+
+                // Draw inner horizontal gutter lines
+                for (let i = 0; i < rows - 1; i++) {
+                    const gutterStartY = marginTop + (i + 1) * rowHeight + i * gutterY;
+                    paths.push(`M ${marginLeft} ${gutterStartY} H ${width - marginRight}`);
+                    paths.push(`M ${marginLeft} ${gutterStartY + gutterY} H ${width - marginRight}`);
                 }
                 return paths;
             }
@@ -462,17 +464,14 @@
 
                 if (colWidth < 0) return [];
                 
-                paths.push(`M ${marginLeft} ${marginTop} H ${width - marginRight}`);
-                paths.push(`M ${marginLeft} ${height - marginBottom} H ${width - marginRight}`);
-                paths.push(`M ${marginLeft} ${marginTop} V ${height - marginBottom}`);
-                paths.push(`M ${width - marginRight} ${marginTop} V ${height - marginBottom}`);
+                // Draw outer box
+                paths.push(`M ${marginLeft} ${marginTop} H ${width - marginRight} V ${height - marginBottom} H ${marginLeft} Z`);
 
-                let currentX = marginLeft + colWidth;
+                // Draw inner gutter lines
                 for (let i = 0; i < columns - 1; i++) {
-                    paths.push(`M ${currentX} ${marginTop} V ${height - marginBottom}`);
-                    currentX += gutterX;
-                    paths.push(`M ${currentX} ${marginTop} V ${height - marginBottom}`);
-                    currentX += colWidth;
+                    const gutterStartX = marginLeft + (i + 1) * colWidth + i * gutterX;
+                    paths.push(`M ${gutterStartX} ${marginTop} V ${height - marginBottom}`);
+                    paths.push(`M ${gutterStartX + gutterX} ${marginTop} V ${height - marginBottom}`);
                 }
                 return paths;
             }
