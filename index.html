@@ -44,7 +44,8 @@
             @apply block w-full bg-white border-gray-400 border text-gray-900 text-sm rounded-lg focus:ring-yellow-400 focus:border-yellow-400 p-2.5 transition-colors;
         }
         .btn {
-            @apply w-full text-brand-dark bg-brand-yellow hover:bg-yellow-400 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-bold rounded-lg text-sm px-5 py-2.5 text-center transition-colors uppercase tracking-wider;
+            @apply w-full text-brand-dark hover:bg-yellow-400 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-bold rounded-lg text-sm px-5 py-2.5 text-center transition-colors uppercase tracking-wider;
+            background-color: var(--brand-yellow);
         }
         .lang-switch {
             @apply text-sm font-medium text-gray-500 hover:text-brand-dark transition-colors cursor-pointer;
@@ -53,6 +54,20 @@
             color: var(--brand-dark);
             font-weight: 700;
             border-bottom: 2px solid var(--brand-yellow);
+        }
+        .app-title {
+            position: relative;
+            display: inline-block;
+            padding-bottom: 4px;
+        }
+        .app-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            width: 60%;
+            background-color: var(--brand-yellow);
         }
     </style>
 </head>
@@ -63,7 +78,7 @@
         <div class="controls-panel w-full md:w-96 p-6 border-r border-gray-200 shadow-lg shrink-0 flex flex-col">
             <div>
                 <div class="flex justify-between items-center mb-6">
-                    <h1 class="text-3xl font-extrabold text-brand-dark" data-lang="appTitle">Generator Siatek</h1>
+                    <h1 class="text-3xl font-extrabold text-brand-dark app-title" data-lang="appTitle">Generator Siatek</h1>
                     <div class="flex space-x-3 items-center">
                         <span id="lang-pl" class="lang-switch active">PL</span>
                         <span id="lang-en" class="lang-switch">EN</span>
@@ -76,20 +91,20 @@
                     <select id="template-select" class="form-select">
                         <option value="custom" data-lang="customSize">Własny rozmiar</option>
                         <optgroup label="Druk" data-lang="print">
-                            <option value="a4">A4 (210x297mm)</option>
-                            <option value="letter">Letter (8.5x11in)</option>
+                            <option value="a4" data-lang="templateA4">A4 (210x297mm)</option>
+                            <option value="letter" data-lang="templateLetter">Letter (8.5x11in)</option>
                         </optgroup>
                         <optgroup label="Telefony" data-lang="phones">
-                            <option value="phone-s">Mały Telefon (375x667px)</option>
-                            <option value="phone-m">Średni Telefon (390x844px)</option>
+                            <option value="phone-s" data-lang="templatePhoneS">Mały Telefon (375x667px)</option>
+                            <option value="phone-m" data-lang="templatePhoneM">Średni Telefon (390x844px)</option>
                         </optgroup>
                          <optgroup label="Tablety" data-lang="tablets">
-                            <option value="tablet-s">Mały Tablet (768x1024px)</option>
-                            <option value="tablet-m">Średni Tablet (820x1180px)</option>
+                            <option value="tablet-s" data-lang="templateTabletS">Mały Tablet (768x1024px)</option>
+                            <option value="tablet-m" data-lang="templateTabletM">Średni Tablet (820x1180px)</option>
                         </optgroup>
                         <optgroup label="Ekrany" data-lang="screens">
-                            <option value="laptop">Laptop (1366x768px)</option>
-                            <option value="desktop">Desktop FHD (1920x1080px)</option>
+                            <option value="laptop" data-lang="templateLaptop">Laptop (1366x768px)</option>
+                            <option value="desktop" data-lang="templateDesktop">Desktop FHD (1920x1080px)</option>
                         </optgroup>
                     </select>
                 </div>
@@ -107,10 +122,10 @@
                     </div>
                      <div class="mb-4">
                          <select id="unit-select" class="form-select">
-                            <option value="px">Piksele (px)</option>
-                            <option value="mm">Milimetry (mm)</option>
-                            <option value="pt">Punkty (pt)</option>
-                            <option value="in">Cale (in)</option>
+                            <option value="px" data-lang="unitPx">Piksele (px)</option>
+                            <option value="mm" data-lang="unitMm">Milimetry (mm)</option>
+                            <option value="pt" data-lang="unitPt">Punkty (pt)</option>
+                            <option value="in" data-lang="unitIn">Cale (in)</option>
                         </select>
                     </div>
                 </div>
@@ -159,20 +174,20 @@
                         <div class="grid grid-cols-2 gap-4" id="gutter-group">
                             <div>
                                 <label for="gutter-x-input" class="form-label" data-lang="hGutter">Odstęp poz. (Gutter)</label>
-                                <input type="number" id="gutter-x-input" class="form-input" value="20" min="0">
+                                <input type="number" id="gutter-x-input" class="form-input" value="3" min="0">
                             </div>
                              <div>
                                 <label for="gutter-y-input" class="form-label" data-lang="vGutter">Odstęp pion. (Gutter)</label>
-                                <input type="number" id="gutter-y-input" class="form-input" value="20" min="0">
+                                <input type="number" id="gutter-y-input" class="form-input" value="3" min="0">
                             </div>
                         </div>
                          <div id="margin-group">
                             <label class="form-label" data-lang="margins">Marginesy</label>
                             <div class="grid grid-cols-4 gap-2">
-                                 <input type="number" id="margin-top-input" class="form-input" placeholder="Góra" data-lang-placeholder="top" value="40" min="0">
-                                 <input type="number" id="margin-right-input" class="form-input" placeholder="Prawa" data-lang-placeholder="right" value="40" min="0">
-                                 <input type="number" id="margin-bottom-input" class="form-input" placeholder="Dół" data-lang-placeholder="bottom" value="40" min="0">
-                                 <input type="number" id="margin-left-input" class="form-input" placeholder="Lewa" data-lang-placeholder="left" value="40" min="0">
+                                 <input type="number" id="margin-top-input" class="form-input" placeholder="Góra" data-lang-placeholder="top" value="10" min="0">
+                                 <input type="number" id="margin-right-input" class="form-input" placeholder="Prawa" data-lang-placeholder="right" value="10" min="0">
+                                 <input type="number" id="margin-bottom-input" class="form-input" placeholder="Dół" data-lang-placeholder="bottom" value="10" min="0">
+                                 <input type="number" id="margin-left-input" class="form-input" placeholder="Lewa" data-lang-placeholder="left" value="10" min="0">
                             </div>
                         </div>
                         <div id="isometric-group" class="hidden space-y-2">
@@ -214,7 +229,7 @@
         </div>
 
         <!-- Preview Area -->
-        <div class="preview-area flex-1 bg-gray-200 p-4 md:p-8">
+        <div class="preview-area flex-1 p-4 md:p-8">
             <svg id="preview-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
         </div>
     </div>
@@ -225,6 +240,9 @@
             const translations = {
                 pl: {
                     appTitle: "Generator Siatek", canvasPresets: "Presety Pola Roboczego", customSize: "Własny rozmiar", print: "Druk", phones: "Telefony", tablets: "Tablety", screens: "Ekrany",
+                    templateA4: "A4 (210x297mm)", templateLetter: "Letter (8.5x11in)", templatePhoneS: "Mały Telefon (375x667px)", templatePhoneM: "Średni Telefon (390x844px)",
+                    templateTabletS: "Mały Tablet (768x1024px)", templateTabletM: "Średni Tablet (820x1180px)", templateLaptop: "Laptop (1366x768px)", templateDesktop: "Desktop FHD (1920x1080px)",
+                    unitPx: "Piksele (px)", unitMm: "Milimetry (mm)", unitPt: "Punkty (pt)", unitIn: "Cale (in)",
                     canvasDimensions: "Wymiary pola roboczego", gridPresets: "Presety Siatki", customGrid: "Siatka własna", presetWeb12: "Standard Web (12 kolumn)", presetWeb4: "Mobile UI (4 kolumny)",
                     presetBook: "Strona książki (Rękopis)", presetThirds: "Trójpodział", presetGoldenRatio: "Złoty podział (Rękopis)", presetBaseline8pt: "Siatka bazowa 8pt",
                     gridType: "Typ siatki", gridTypeModular: "Siatka modularna", gridTypeColumn: "Siatka kolumnowa", gridTypeThirds: "Trójpodział", gridTypeIsometric: "Siatka izometryczna",
@@ -234,6 +252,9 @@
                 },
                 en: {
                     appTitle: "Grid Generator", canvasPresets: "Canvas Presets", customSize: "Custom size", print: "Print", phones: "Phones", tablets: "Tablets", screens: "Screens",
+                    templateA4: "A4 (210x297mm)", templateLetter: "Letter (8.5x11in)", templatePhoneS: "Small Phone (375x667px)", templatePhoneM: "Medium Phone (390x844px)",
+                    templateTabletS: "Small Tablet (768x1024px)", templateTabletM: "Medium Tablet (820x1180px)", templateLaptop: "Laptop (1366x768px)", templateDesktop: "Desktop FHD (1920x1080px)",
+                    unitPx: "Pixels (px)", unitMm: "Millimeters (mm)", unitPt: "Points (pt)", unitIn: "Inches (in)",
                     canvasDimensions: "Canvas Dimensions", gridPresets: "Grid Presets", customGrid: "Custom Grid", presetWeb12: "Standard Web (12 col)", presetWeb4: "Mobile UI (4 col)",
                     presetBook: "Book Page (Manuscript)", presetThirds: "Rule of Thirds", presetGoldenRatio: "Golden Ratio (Manuscript)", presetBaseline8pt: "8pt Baseline Grid",
                     gridType: "Grid Type", gridTypeModular: "Modular Grid", gridTypeColumn: "Column Grid", gridTypeThirds: "Rule of Thirds", gridTypeIsometric: "Isometric Grid",
@@ -570,12 +591,13 @@
                     if (input) {
                         if (preset[field] !== undefined) {
                             let valueInPx = preset[field];
-                            if (field.includes('margin') || field.includes('gutter')) {
+                            if ((field.includes('margin') || field.includes('gutter')) && state.unit === 'px') {
                                 valueInPx *= scaleFactor;
                             }
                             const valueInUnits = fromPx(valueInPx);
+                             // FIX: Ensure columns and rows are always integers
                             if (field === 'columns' || field === 'rows') {
-                                input.value = Math.round(valueInUnits);
+                                input.value = preset[field];
                             } else {
                                 input.value = parseFloat(valueInUnits.toFixed(2));
                             }
